@@ -9,7 +9,38 @@
   }
   window.pdmContentScriptLoaded = true;
   
-  console.log('Private Data Manager content script loaded');
+  // Check if we should run on this site
+  const currentDomain = window.location.hostname.toLowerCase();
+  const excludedSites = [
+    'youtube.com',
+    'youtu.be',
+    'netflix.com',
+    'hulu.com',
+    'disney.com',
+    'amazon.com',
+    'twitch.tv',
+    'facebook.com',
+    'instagram.com',
+    'tiktok.com',
+    'twitter.com',
+    'x.com',
+    'reddit.com',
+    'pinterest.com',
+    'snapchat.com',
+    'discord.com',
+    'zoom.us',
+    'teams.microsoft.com',
+    'meet.google.com',
+    'webex.com'
+  ];
+  
+  // Skip if current site is in excluded list
+  if (excludedSites.some(site => currentDomain.includes(site))) {
+    console.log('Nillion Vault: Skipping site (excluded):', currentDomain);
+    return;
+  }
+  
+  console.log('Nillion Vault content script loaded on:', currentDomain);
   
   // Create message handler for communication with web apps
   const messageHandler = {
@@ -379,22 +410,28 @@
     // Grant permission and auto-fill fields
     const grantPermissionAndFill = async (siteName, domain, permissions, description, matchingFields) => {
       try {
-        // Initialize Nillion API
-        if (!window.nillionAPI) {
-          window.nillionAPI = new NillionAPI();
-        }
-        
-        // Grant permission through Nillion API
+        // Grant permission through extension messaging
         const appId = domain.replace(/[^a-zA-Z0-9]/g, '');
-        const result = await window.nillionAPI.grantPermission(appId, siteName, permissions, description);
         
-        if (result.success) {
+        // Send message to background script
+        const response = await chrome.runtime.sendMessage({
+          type: 'GRANT_PERMISSION',
+          payload: {
+            appId: appId,
+            siteName: siteName,
+            domain: domain,
+            permissions: permissions,
+            description: description
+          }
+        });
+        
+        if (response && response.success) {
           showNotification(`✅ Access granted to ${siteName}`, 'success');
           
           // Auto-fill fields with stored data
           autoFillFields(matchingFields);
         } else {
-          throw new Error(result.error || 'Failed to grant permission');
+          throw new Error(response?.error || 'Failed to grant permission');
         }
       } catch (error) {
         console.error('❌ Permission grant failed:', error);
@@ -407,13 +444,16 @@
       console.log('🔄 Nillion Vault: Starting auto-fill for', matchingFields.length, 'fields');
       
       try {
-        // Initialize Nillion API
-        if (!window.nillionAPI) {
-          window.nillionAPI = new NillionAPI();
+        // Get data from Nillion Private Storage via extension messaging
+        const response = await chrome.runtime.sendMessage({
+          type: 'LIST_DATA'
+        });
+        
+        if (!response || !response.success) {
+          throw new Error(response?.error || 'Failed to get data');
         }
         
-        // Get data from Nillion Private Storage
-        const result = await window.nillionAPI.listData();
+        const result = { success: true, data: response.data };
         
         if (result.success) {
           const storedData = result.data || [];
@@ -580,7 +620,7 @@
       const uploadFields = [];
       uploadAreas.forEach(area => {
         const text = (area.textContent || area.innerText || '').toLowerCase();
-        const className = (area.className || '').toLowerCase();
+        const className = (typeof area.className === 'string' ? area.className : (area.className && area.className.toString ? area.className.toString() : '') || '').toLowerCase();
         const id = (area.id || '').toLowerCase();
         
         // Check if this looks like an upload area

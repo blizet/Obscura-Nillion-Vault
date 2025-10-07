@@ -42,7 +42,7 @@
     },
     "web_accessible_resources": [
       {
-        "resources": ["popup.html", "data-form.html", "test.html", "test-upload.html", "simple-upload-test.html", "test-smart-detection.html", "debug-detection.html", "nillion-api.js", "assets/*"],
+        "resources": ["popup.html", "welcome.html", "welcome.js", "nillion-api.js", "assets/*"],
         "matches": ["<all_urls>"]
       }
     ],

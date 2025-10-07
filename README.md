@@ -1,6 +1,14 @@
-# 🔒 Nillion Vault Extension
+# 🔒 Nillion Vault Extension - Production Ready
 
-A powerful browser extension for secure private data management powered by **Nillion SecretVaults**. Store, manage, and auto-fill your personal data across websites with complete privacy and control.
+A **production-ready** browser extension for secure private data management powered by **real Nillion network integration**. Store, manage, and auto-fill your personal data across websites with complete privacy and control.
+
+## 🚀 **NEW: Production Architecture**
+
+- **✅ Real Nillion Network**: Direct integration with Nillion's testnet
+- **✅ Backend Server**: Secure Node.js server with builder private key  
+- **✅ User Keypairs**: Automatically generated in browser (no setup required)
+- **✅ End-to-End Encryption**: Data encrypted and stored on distributed network
+- **✅ Production Security**: No private keys stored in browser
 
 ## ✨ Key Features
 
@@ -38,18 +46,44 @@ A powerful browser extension for secure private data management powered by **Nil
 
 ## 🚀 Quick Start
 
-### Installation
-1. **Download**: Get the extension files
-2. **Open Chrome**: Go to `chrome://extensions/`
-3. **Enable Developer Mode**: Toggle in top-right corner
-4. **Load Extension**: Click "Load unpacked" and select the `dist` folder
-5. **Pin Extension**: Click the puzzle piece icon and pin "Nillion Vault"
+### **Prerequisites**
+1. **Get Nillion Builder Private Key**: Visit [Nillion Subscription Portal](https://nilpay.nillion.com/)
+2. **Node.js 22+**: Required for backend server
+3. **Chrome/Edge Browser**: For the extension
 
-### First Use
-1. **Click Extension**: Open Nillion Vault from toolbar
-2. **Generate DID**: Click "Generate DID" to create your identity
-3. **Add Data**: Click "Create Data" to store your first item
-4. **Visit Websites**: Go to any site with forms to see auto-detection
+### **Step 1: Start Backend Server**
+```bash
+# Windows
+start-server.bat
+
+# Linux/Mac  
+./start-server.sh
+
+# Or manually:
+cd server
+npm install
+cp env.example .env
+# Edit .env with your BUILDER_PRIVATE_KEY
+npm start
+```
+
+### **Step 2: Install Extension**
+1. **Open Chrome**: Go to `chrome://extensions/`
+2. **Enable Developer Mode**: Toggle in top-right corner
+3. **Load Extension**: Click "Load unpacked" and select the `dist` folder
+4. **Pin Extension**: Click the puzzle piece icon and pin "Nillion Vault"
+
+### **Step 3: Configure Extension**
+1. **Click Extension**: Opens welcome page automatically
+2. **Click "Start Using Nillion Vault"**: No API key needed!
+3. **Generate DID**: Click "Generate DID" to create your identity
+4. **Add Data**: Click "Create Data" to store your first item
+5. **Visit Websites**: Go to any site with forms to see auto-detection
+
+### **Verify Setup**
+- **Server**: http://localhost:3001/health should show "healthy"
+- **Extension**: Should show "✅ Nillion network connection: Active"
+- **Data**: Should be able to create and list data items
 
 ## 🎯 How It Works
 
@@ -145,10 +179,12 @@ The extension works on **any website** with forms, including:
 - **Content Scripts**: Injected into web pages for detection
 - **Web Crypto API**: Browser-native encryption
 
-### **Nillion Integration**
-- **Real API**: Direct connection to Nillion SecretVaults
-- **DID Generation**: Creates unique decentralized identifiers
-- **Key Management**: Secure keypair generation and storage
+### **Nillion SecretVaults Integration**
+- **SecretVaults Protocol**: Implements User Owned Collections API
+- **UserCredentials**: DID + Keypair management (compatible with @nillion/client-wasm)
+- **SecretVault Operations**: Store, retrieve, list, delete encrypted data
+- **PermissionManager**: Grant/revoke access control
+- **Browser-Compatible**: Direct API implementation for extension use
 - **Network Storage**: Data stored on Nillion's private network
 
 ### **Browser Compatibility**
@@ -178,11 +214,22 @@ The extension works on **any website** with forms, including:
 
 ## 🔧 Configuration
 
-### **API Key Setup**
-The extension uses a pre-configured Nillion API key:
-```
-API Key: 02e2b5bb41a552230c007a2169594fc0d794e6bc6dce160a11f37d8e4aaa0a9f0f
-```
+### **Production Architecture**
+**NEW: No API key required for users!**
+
+The new architecture:
+- **Backend Server**: Holds builder private key securely
+- **User Keypairs**: Generated automatically in browser
+- **Delegation Tokens**: Server provides time-limited access tokens
+- **Real Nillion Network**: Direct integration with testnet
+- **End-to-End Encryption**: Data encrypted before network storage
+
+**How it works:**
+- **Builder (You)**: Runs server with private key, creates collections
+- **Users**: Generate keypairs locally, store data on Nillion network
+- **Security**: Private keys never leave the server
+- **Scalability**: One server can serve many users
+
 
 ### **Storage Locations**
 - **Browser Storage**: Extension settings and preferences

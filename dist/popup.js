@@ -1,7 +1,7 @@
-// PDM Extension Popup - Main Logic
+// Nillion Vault Extension Popup - Main Logic
 let did = null;
 let data = [];
-let nillionAPI = null; // Real Nillion API instance
+let nillionSDK = null; // Real Nillion SDK instance
 
 function addLog(message) {
     const log = document.getElementById('log');
@@ -18,15 +18,44 @@ function setStatus(message, type = 'warning') {
     status.className = 'status ' + type;
 }
 
-function checkStatus() {
+async function checkStatus() {
     addLog('🔍 Checking extension status...');
     
     if (chrome.runtime && chrome.runtime.id) {
-        setStatus('Extension: Active ✅', 'success');
         addLog('✅ Extension runtime available');
         addLog('🆔 Extension ID: ' + chrome.runtime.id);
         addLog('🌐 Nillion Integration: Active');
-        addLog('🔑 API Key: Configured');
+        
+        // Check API key status
+        const result = await chrome.storage.local.get(['api_key_configured', 'nillion_api_key']);
+        if (result.api_key_configured && result.nillion_api_key) {
+            addLog('🔑 API Key: Configured');
+            
+          // Test connection to Nillion network via backend server
+          addLog('🔗 Testing connection to Nillion network...');
+          try {
+              if (!nillionSDK) {
+                  nillionSDK = new NillionSDK();
+              }
+              const testResult = await nillionSDK.testConnection();
+              if (testResult.success) {
+                  addLog('✅ Nillion network connection: Active');
+                  addLog('✅ Server: ' + testResult.server);
+                  addLog('✅ Builder: ' + testResult.builder);
+                  addLog('✅ Collection: ' + testResult.collection);
+                  setStatus('Extension: Active ✅', 'success');
+              } else {
+                  addLog('⚠️ Nillion network connection: Failed - ' + testResult.error);
+                  setStatus('Extension: Network Error ⚠️', 'warning');
+              }
+          } catch (error) {
+              addLog('⚠️ Nillion network test failed: ' + error.message);
+              setStatus('Extension: Network Error ⚠️', 'warning');
+          }
+        } else {
+            addLog('❌ API Key: Not configured');
+            setStatus('Extension: Not Initialized ❌', 'error');
+        }
     } else {
         setStatus('Extension: Error ❌', 'error');
         addLog('❌ Extension runtime not available');
@@ -36,19 +65,23 @@ function checkStatus() {
 async function generateDID() {
     addLog('🔄 Generating DID with Nillion...');
     try {
-        // Initialize Nillion API if not already done
-        if (!nillionAPI) {
-            nillionAPI = new NillionAPI();
+        // Initialize Nillion SDK if not already done
+        if (!nillionSDK) {
+            nillionSDK = new NillionSDK();
         }
         
-        const result = await nillionAPI.initialize();
+        const result = await nillionSDK.initialize();
         
         if (result.success) {
-            did = result.did;
+            did = {
+                id: result.userDid,
+                publicKey: result.userDid.split(':')[2] // Extract public key from DID
+            };
             setStatus('DID Generated ✅', 'success');
             addLog('✅ DID Generated: ' + did.id);
             addLog('🔑 Public Key: ' + did.publicKey.substring(0, 20) + '...');
-            addLog('💾 Stored in Nillion network');
+            addLog('💾 Connected to Nillion network');
+            addLog('📦 Collection: ' + result.collectionId);
         } else {
             throw new Error(result.error || 'Failed to generate DID');
         }
@@ -289,41 +322,55 @@ function setupModalEvents(modal) {
             createdAt: new Date().toISOString()
         };
         
-        // Store in Nillion Private Storage
-        if (!nillionAPI) {
-            nillionAPI = new NillionAPI();
-        }
-        
-        nillionAPI.storeData(newData.id, newData, {
-            name: newData.name,
-            type: newData.type,
-            fileName: newData.fileName,
-            fileSize: newData.fileSize,
-            fileType: newData.fileType
-        }).then(result => {
-            if (result.success) {
-                addLog(`✅ Data created: ${name} (${type})`);
-                setStatus('Data Created ✅', 'success');
-                modal.remove();
-            } else {
-                throw new Error(result.error || 'Failed to store data');
-            }
-        }).catch(error => {
-            addLog(`❌ Error creating data: ${error.message}`);
-            setStatus('Data Creation Error ❌', 'error');
-        });
+          // Store in Nillion Private Storage
+          if (!nillionSDK) {
+              nillionSDK = new NillionSDK();
+          }
+          
+          // Initialize SDK first if not already done
+          nillionSDK.initialize().then(initResult => {
+              if (!initResult.success) {
+                  throw new Error(initResult.error || 'Failed to initialize SDK');
+              }
+              
+              // Now create the data
+              return nillionSDK.createData(newData.id, newData, {
+                  name: newData.name,
+                  type: newData.type,
+                  fileName: newData.fileName,
+                  fileSize: newData.fileSize,
+                  fileType: newData.fileType
+              });
+          }).then(result => {
+              if (result.success) {
+                  addLog(`✅ Data created: ${name} (${type})`);
+                  setStatus('Data Created ✅', 'success');
+                  modal.remove();
+              } else {
+                  throw new Error(result.error || 'Failed to store data');
+              }
+          }).catch(error => {
+              addLog(`❌ Error creating data: ${error.message}`);
+              setStatus('Data Creation Error ❌', 'error');
+          });
     });
 }
 
 async function listData() {
     addLog('📋 Listing all data from Nillion network...');
     
-    if (!nillionAPI) {
-        nillionAPI = new NillionAPI();
+    if (!nillionSDK) {
+        nillionSDK = new NillionSDK();
     }
     
     try {
-        const result = await nillionAPI.listData();
+        // Initialize SDK first if not already done
+        const initResult = await nillionSDK.initialize();
+        if (!initResult.success) {
+            throw new Error(initResult.error || 'Failed to initialize SDK');
+        }
+        
+        const result = await nillionSDK.listData();
         
         if (result.success) {
             const storedData = result.data || [];
@@ -415,9 +462,9 @@ function showDataViewer(dataItems) {
                             </div>
                         </div>
                         
-                        <div style="margin-bottom: 10px;">
-                            <strong>Content:</strong> ${item.content ? item.content.substring(0, 100) + (item.content.length > 100 ? '...' : '') : 'No content'}
-                        </div>
+                          <div style="margin-bottom: 10px;">
+                              <strong>Content:</strong> ${item.content ? (typeof item.content === 'string' ? item.content.substring(0, 100) + (item.content.length > 100 ? '...' : '') : JSON.stringify(item.content).substring(0, 100) + '...') : 'No content'}
+                          </div>
                         
                         ${item.fileName ? `
                             <div style="margin-bottom: 10px;">
@@ -641,12 +688,18 @@ function showDataDetails(item) {
 }
 
 async function deleteDataItem(dataId) {
-    if (!nillionAPI) {
-        nillionAPI = new NillionAPI();
+    if (!nillionSDK) {
+        nillionSDK = new NillionSDK();
     }
     
     try {
-        const result = await nillionAPI.deleteData(dataId);
+        // Initialize SDK first if not already done
+        const initResult = await nillionSDK.initialize();
+        if (!initResult.success) {
+            throw new Error(initResult.error || 'Failed to initialize SDK');
+        }
+        
+        const result = await nillionSDK.deleteData(dataId);
         
         if (result.success) {
             addLog(`🗑️ Data item deleted: ${dataId}`);
@@ -662,17 +715,23 @@ async function deleteDataItem(dataId) {
 
 async function clearData() {
     if (confirm('⚠️ Clear all data from Nillion network? This cannot be undone.')) {
-        if (!nillionAPI) {
-            nillionAPI = new NillionAPI();
+        if (!nillionSDK) {
+            nillionSDK = new NillionSDK();
         }
         
         try {
+            // Initialize SDK first if not already done
+            const initResult = await nillionSDK.initialize();
+            if (!initResult.success) {
+                throw new Error(initResult.error || 'Failed to initialize SDK');
+            }
+            
             // Get all data first
-            const listResult = await nillionAPI.listData();
+            const listResult = await nillionSDK.listData();
             if (listResult.success && listResult.data) {
                 // Delete each item
                 for (const item of listResult.data) {
-                    await nillionAPI.deleteData(item.id);
+                    await nillionSDK.deleteData(item._id);
                 }
                 addLog('🗑️ All data cleared from Nillion network');
                 setStatus('Data Cleared ✅', 'success');
@@ -727,8 +786,8 @@ async function testPermission() {
 async function listPermissions() {
     addLog('📋 Listing all website permissions...');
     
-    if (!nillionAPI) {
-        nillionAPI = new NillionAPI();
+    if (!nillionSDK) {
+        nillionSDK = new NillionSDK();
     }
     
     try {
@@ -742,60 +801,55 @@ async function listPermissions() {
             addLog('🌐 Current website: ' + currentSiteName + ' (' + currentDomain + ')');
             addLog('');
             
-            // Get all permissions from Nillion
-            const result = await nillionAPI.listPermissions();
+            // Get permissions from local storage (simplified for now)
+            const result = await chrome.storage.local.get(['pdm_permissions']);
+            const permissions = result.pdm_permissions || [];
             
-            if (result.success) {
-                const permissions = result.data || [];
+            if (permissions.length === 0) {
+                addLog('📭 No website permissions found');
+                addLog('💡 Visit websites with forms to grant permissions');
+                setStatus('No Permissions', 'warning');
+            } else {
+                addLog('📊 Found ' + permissions.length + ' website permission(s):');
+                addLog('');
                 
-                if (permissions.length === 0) {
-                    addLog('📭 No website permissions found');
-                    addLog('💡 Visit websites with forms to grant permissions');
-                    setStatus('No Permissions', 'warning');
-                } else {
-                    addLog('📊 Found ' + permissions.length + ' website permission(s):');
-                    addLog('');
-                    
-                    // Group by domain
-                    const permissionsByDomain = {};
-                    permissions.forEach(perm => {
-                        if (!permissionsByDomain[perm.domain]) {
-                            permissionsByDomain[perm.domain] = [];
-                        }
-                        permissionsByDomain[perm.domain].push(perm);
+                // Group by domain
+                const permissionsByDomain = {};
+                permissions.forEach(perm => {
+                    if (!permissionsByDomain[perm.domain]) {
+                        permissionsByDomain[perm.domain] = [];
+                    }
+                    permissionsByDomain[perm.domain].push(perm);
+                });
+                
+                // Show current website first
+                if (permissionsByDomain[currentDomain]) {
+                    addLog('🎯 CURRENT WEBSITE:');
+                    permissionsByDomain[currentDomain].forEach(perm => {
+                        addLog('  📋 ' + perm.siteName + ' (' + perm.domain + ')');
+                        addLog('     Permissions: ' + perm.permissions.join(', '));
+                        addLog('     Granted: ' + new Date(perm.grantedAt).toLocaleString());
+                        addLog('     Description: ' + (perm.description || 'No description'));
+                        addLog('');
                     });
-                    
-                    // Show current website first
-                    if (permissionsByDomain[currentDomain]) {
-                        addLog('🎯 CURRENT WEBSITE:');
-                        permissionsByDomain[currentDomain].forEach(perm => {
+                }
+                
+                // Show other websites
+                const otherDomains = Object.keys(permissionsByDomain).filter(domain => domain !== currentDomain);
+                if (otherDomains.length > 0) {
+                    addLog('🌐 OTHER WEBSITES:');
+                    otherDomains.forEach(domain => {
+                        permissionsByDomain[domain].forEach(perm => {
                             addLog('  📋 ' + perm.siteName + ' (' + perm.domain + ')');
                             addLog('     Permissions: ' + perm.permissions.join(', '));
                             addLog('     Granted: ' + new Date(perm.grantedAt).toLocaleString());
                             addLog('     Description: ' + (perm.description || 'No description'));
                             addLog('');
                         });
-                    }
-                    
-                    // Show other websites
-                    const otherDomains = Object.keys(permissionsByDomain).filter(domain => domain !== currentDomain);
-                    if (otherDomains.length > 0) {
-                        addLog('🌐 OTHER WEBSITES:');
-                        otherDomains.forEach(domain => {
-                            permissionsByDomain[domain].forEach(perm => {
-                                addLog('  📋 ' + perm.siteName + ' (' + perm.domain + ')');
-                                addLog('     Permissions: ' + perm.permissions.join(', '));
-                                addLog('     Granted: ' + new Date(perm.grantedAt).toLocaleString());
-                                addLog('     Description: ' + (perm.description || 'No description'));
-                                addLog('');
-                            });
-                        });
-                    }
-                    
-                    setStatus(permissions.length + ' Permissions Found', 'success');
+                    });
                 }
-            } else {
-                throw new Error(result.error || 'Failed to list permissions');
+                
+                setStatus(permissions.length + ' Permissions Found', 'success');
             }
         } else {
             addLog('❌ Could not get current tab information');
@@ -838,8 +892,8 @@ function getSiteName(domain) {
 async function revokePermission() {
     addLog('🗑️ Revoking permissions for current website...');
     
-    if (!nillionAPI) {
-        nillionAPI = new NillionAPI();
+    if (!nillionSDK) {
+        nillionSDK = new NillionSDK();
     }
     
     try {
@@ -852,31 +906,27 @@ async function revokePermission() {
             
             addLog('🌐 Current website: ' + siteName + ' (' + currentDomain + ')');
             
-            // Get all permissions from Nillion
-            const listResult = await nillionAPI.listPermissions();
-            if (listResult.success) {
-                const permissions = listResult.data || [];
-                const sitePermissions = permissions.filter(p => p.domain === currentDomain);
+            // Get permissions from local storage
+            const result = await chrome.storage.local.get(['pdm_permissions']);
+            const permissions = result.pdm_permissions || [];
+            const sitePermissions = permissions.filter(p => p.domain === currentDomain);
+            
+            if (sitePermissions.length > 0) {
+                addLog('🗑️ Revoking ' + sitePermissions.length + ' permission(s) for ' + siteName);
                 
-                if (sitePermissions.length > 0) {
-                    addLog('🗑️ Revoking ' + sitePermissions.length + ' permission(s) for ' + siteName);
-                    
-                    // Revoke each permission
-                    for (const perm of sitePermissions) {
-                        const revokeResult = await nillionAPI.revokePermission(perm.appId);
-                        if (revokeResult.success) {
-                            addLog('  ❌ Removed: ' + perm.siteName + ' (' + perm.permissions.join(', ') + ')');
-                        }
-                    }
-                    
-                    addLog('✅ Permissions revoked successfully');
-                    setStatus('Permissions Revoked ✅', 'success');
-                } else {
-                    addLog('⚠️ No permissions found for this site');
-                    setStatus('No Permissions to Revoke', 'warning');
-                }
+                // Remove permissions from local storage
+                const remainingPermissions = permissions.filter(p => p.domain !== currentDomain);
+                await chrome.storage.local.set({ pdm_permissions: remainingPermissions });
+                
+                sitePermissions.forEach(perm => {
+                    addLog('  ❌ Removed: ' + perm.siteName + ' (' + perm.permissions.join(', ') + ')');
+                });
+                
+                addLog('✅ Permissions revoked successfully');
+                setStatus('Permissions Revoked ✅', 'success');
             } else {
-                throw new Error(listResult.error || 'Failed to list permissions');
+                addLog('⚠️ No permissions found for this site');
+                setStatus('No Permissions to Revoke', 'warning');
             }
         } else {
             addLog('❌ Could not get current tab information');
@@ -895,44 +945,117 @@ function clearLog() {
     }
 }
 
+function copyLog() {
+    const log = document.getElementById('log');
+    if (log) {
+        const logText = log.textContent;
+        navigator.clipboard.writeText(logText).then(() => {
+            addLog('📋 Log copied to clipboard');
+            setStatus('Log Copied ✅', 'success');
+        }).catch(err => {
+            addLog('❌ Failed to copy log: ' + err.message);
+            setStatus('Copy Failed ❌', 'error');
+        });
+    }
+}
+
+async function checkApiKeyStatus() {
+    try {
+        const result = await chrome.storage.local.get(['api_key_configured', 'nillion_api_key']);
+        
+        if (result.api_key_configured && result.nillion_api_key) {
+            // API key is configured
+            const apiKeyPreview = result.nillion_api_key.substring(0, 8) + '...' + result.nillion_api_key.substring(result.nillion_api_key.length - 4);
+            addLog('🔑 API Key: ' + apiKeyPreview + ' (Configured)');
+            setStatus('Ready ✅', 'success');
+        } else {
+            // No API key configured
+            addLog('❌ API Key: Not configured');
+            setStatus('Not Initialized ❌', 'error');
+            addLog('💡 Click "⚙️ Configure API Key" to get started');
+        }
+    } catch (error) {
+        console.error('Error checking API key status:', error);
+        addLog('❌ Error checking API key status');
+        setStatus('Error ❌', 'error');
+    }
+}
+
 // Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('PDM Extension Popup Loading...');
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('Nillion Vault Extension Popup Loading...');
+    
+    // Check if API key is configured first
+    try {
+        const result = await chrome.storage.local.get(['api_key_configured', 'nillion_api_key']);
+        if (!result.api_key_configured || !result.nillion_api_key) {
+            // No API key configured - show message and redirect button
+            addLog('❌ API Key not configured');
+            setStatus('API Key Required ❌', 'error');
+            addLog('💡 Click "⚙️ Configure API Key" to get started');
+            
+            // Show configure button prominently
+            const configureBtn = document.getElementById('configureApiBtn');
+            if (configureBtn) {
+                configureBtn.style.background = '#dc3545';
+                configureBtn.style.color = 'white';
+                configureBtn.style.fontWeight = 'bold';
+                configureBtn.textContent = '⚙️ Configure API Key (Required)';
+            }
+            return;
+        }
+    } catch (error) {
+        console.error('Error checking API key:', error);
+        addLog('❌ Error checking API key');
+        setStatus('Error ❌', 'error');
+        return;
+    }
     
     // Add event listeners to all buttons
     const buttons = document.querySelectorAll('.button');
     buttons.forEach(button => {
-        const text = button.textContent.trim();
-        console.log('Setting up button:', text);
+        const buttonId = button.id;
+        console.log('Setting up button:', buttonId);
         
-        switch(text) {
-            case 'Check Status':
+        switch(buttonId) {
+            case 'configureApiBtn':
+                button.addEventListener('click', function() {
+                    addLog('⚙️ Opening API key configuration...');
+                    chrome.tabs.create({
+                        url: chrome.runtime.getURL('welcome.html')
+                    });
+                });
+                break;
+            case 'checkStatusBtn':
                 button.addEventListener('click', checkStatus);
                 break;
-            case 'Generate DID':
+            case 'generateDIDBtn':
                 button.addEventListener('click', generateDID);
                 break;
-            case 'Create Data':
+            case 'createDataBtn':
                 button.addEventListener('click', openDataForm);
                 break;
-            case 'List Data':
+            case 'listDataBtn':
                 button.addEventListener('click', listData);
                 break;
-            case 'Clear All Data':
+            case 'clearDataBtn':
                 button.addEventListener('click', clearData);
                 break;
-            case 'Test Permission':
+            case 'testPermissionBtn':
                 button.addEventListener('click', testPermission);
                 break;
-            case 'List Permissions':
+            case 'listPermissionsBtn':
                 button.addEventListener('click', listPermissions);
                 break;
-            case 'Revoke Current Site':
+            case 'revokePermissionBtn':
                 button.addEventListener('click', revokePermission);
                 break;
-            case 'Clear Log':
-                button.addEventListener('click', clearLog);
-                break;
+              case 'clearLogBtn':
+                  button.addEventListener('click', clearLog);
+                  break;
+              case 'copyLogBtn':
+                  button.addEventListener('click', copyLog);
+                  break;
         }
     });
     
@@ -940,12 +1063,34 @@ document.addEventListener('DOMContentLoaded', function() {
     addLog('🚀 Nillion Vault Loaded');
     addLog('🔧 Version: 1.0.0');
     addLog('🌐 Powered by Nillion SecretVaults');
-    addLog('🔑 API Key: 02e2b5bb...a9f0f');
     
-    // Auto-check status
-    setTimeout(() => {
-        checkStatus();
-    }, 500);
+    // Check API key status
+    checkApiKeyStatus();
+    
+      // Auto-check status
+      setTimeout(() => {
+          checkStatus();
+      }, 500);
+      
+      // Auto-initialize SDK
+      setTimeout(async () => {
+          try {
+              if (!nillionSDK) {
+                  nillionSDK = new NillionSDK();
+              }
+              const initResult = await nillionSDK.initialize();
+              if (initResult.success) {
+                  addLog('✅ Nillion SDK initialized successfully');
+                  setStatus('Ready ✅', 'success');
+              } else {
+                  addLog('⚠️ SDK initialization failed: ' + initResult.error);
+                  setStatus('SDK Error ⚠️', 'warning');
+              }
+          } catch (error) {
+              addLog('⚠️ SDK initialization error: ' + error.message);
+              setStatus('SDK Error ⚠️', 'warning');
+          }
+      }, 1000);
     
     console.log('Nillion Vault Extension Popup Ready!');
 });

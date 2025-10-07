@@ -5,9 +5,31 @@ chrome.runtime.onInstalled.addListener((details) => {
     console.log('Nillion Vault extension installed/updated');
   
   if (details.reason === 'install') {
-    // Open welcome page or show onboarding
+    // Open welcome page for API key configuration
     chrome.tabs.create({
-      url: chrome.runtime.getURL('popup.html')
+      url: chrome.runtime.getURL('welcome.html')
+    });
+  }
+});
+
+// Handle extension icon click - redirect to welcome page if no API key
+chrome.action.onClicked.addListener(async (tab) => {
+  try {
+    // Check if API key is configured
+    const result = await chrome.storage.local.get(['api_key_configured', 'nillion_api_key']);
+    
+    if (!result.api_key_configured || !result.nillion_api_key) {
+      // No API key configured - redirect to welcome page
+      chrome.tabs.create({
+        url: chrome.runtime.getURL('welcome.html')
+      });
+    }
+    // If API key is configured, the default popup will open
+  } catch (error) {
+    console.error('Error checking API key:', error);
+    // On error, redirect to welcome page
+    chrome.tabs.create({
+      url: chrome.runtime.getURL('welcome.html')
     });
   }
 });
@@ -110,26 +132,46 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       break;
       
     case 'PDM_LIST_DATA':
-      // Handle list data requests
+    case 'LIST_DATA':
+      // Handle list data requests - get real data from storage
       console.log('List data request received');
-      sendResponse({
-        success: true,
-        data: [
-          {
-            id: 'demo-data-1',
-            name: 'Demo Document',
-            type: 'document',
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: 'demo-data-2',
-            name: 'Demo Image',
-            type: 'image',
-            createdAt: new Date().toISOString()
-          }
-        ]
+      chrome.storage.local.get(['nillion_data'], (result) => {
+        const storedData = result.nillion_data || [];
+        console.log('Returning stored data:', storedData);
+        sendResponse({
+          success: true,
+          data: storedData
+        });
       });
-      break;
+      return true; // Indicate async response
+      
+    case 'GRANT_PERMISSION':
+      // Grant permission for a website
+      console.log('GRANT_PERMISSION received:', request.payload);
+      const { appId, siteName, domain, permissions, description } = request.payload;
+      
+      // Store permission in local storage
+      chrome.storage.local.get(['pdm_permissions'], (result) => {
+        const permissionsList = result.pdm_permissions || [];
+        const newPermission = {
+          id: appId,
+          siteName: siteName,
+          domain: domain,
+          permissions: permissions,
+          description: description,
+          grantedAt: new Date().toISOString()
+        };
+        
+        // Remove existing permission for this domain
+        const filteredPermissions = permissionsList.filter(p => p.domain !== domain);
+        filteredPermissions.push(newPermission);
+        
+        chrome.storage.local.set({ pdm_permissions: filteredPermissions }, () => {
+          console.log('Permission granted and stored:', newPermission);
+          sendResponse({ success: true, data: newPermission });
+        });
+      });
+      return true; // Indicate async response
       
     case 'NOTIFY_PERMISSION_REQUEST':
       // Show notification for permission requests

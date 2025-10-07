@@ -20,15 +20,16 @@
         
         <div class="section">
             <h3>🚀 Quick Actions</h3>
-            <button class="button">Check Status</button>
-            <button class="button">Generate DID</button>
-            <button class="button">Create Data</button>
+            <button class="button" id="configureApiBtn">⚙️ Configure API Key</button>
+            <button class="button" id="checkStatusBtn">Check Status</button>
+            <button class="button" id="generateDIDBtn">Generate DID</button>
+            <button class="button" id="createDataBtn">Create Data</button>
         </div>
         
         <div class="section">
             <h3>📊 Data Management</h3>
-            <button class="button">List Data</button>
-            <button class="button">Clear All Data</button>
+            <button class="button" id="listDataBtn">List Data</button>
+            <button class="button" id="clearDataBtn">Clear All Data</button>
         </div>
         
         <div class="section">
@@ -38,14 +39,17 @@
             <button class="button" id="revokePermissionBtn">Revoke Current Site</button>
         </div>
         
-        <div class="section">
-            <h3>📝 Activity Log</h3>
-            <div id="log" class="log">Ready to use PDM Extension...</div>
-            <button class="button">Clear Log</button>
-        </div>
+          <div class="section">
+              <h3>📝 Activity Log</h3>
+              <div id="log" class="log">Ready to use Nillion Vault Extension...</div>
+              <div style="display: flex; gap: 10px; margin-top: 10px;">
+                  <button class="button" id="copyLogBtn">📋 Copy Log</button>
+                  <button class="button" id="clearLogBtn">🗑️ Clear Log</button>
+              </div>
+          </div>
     </div>
 
-    <script src="nillion-api.js"></script>
+    <script src="nillion-sdk.js"></script>
     <script src="popup.js"></script>
 </body>
 </html>
