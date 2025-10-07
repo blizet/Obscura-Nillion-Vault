@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nillion Vault</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="icons/icon-16.png">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔒 Nillion Vault</h1>
+            <p>Powered by Nillion SecretVaults</p>
+        </div>
+        
+        <div id="status" class="status warning">
+            <strong>Status:</strong> Initializing...
+        </div>
+        
+        <div class="section">
+            <h3>🚀 Quick Actions</h3>
+            <button class="button">Check Status</button>
+            <button class="button">Generate DID</button>
+            <button class="button">Create Data</button>
+        </div>
+        
+        <div class="section">
+            <h3>📊 Data Management</h3>
+            <button class="button">List Data</button>
+            <button class="button">Clear All Data</button>
+        </div>
+        
+        <div class="section">
+            <h3>🔐 Permissions</h3>
+            <button class="button" id="testPermissionBtn">Test Permission</button>
+            <button class="button" id="listPermissionsBtn">List Permissions</button>
+            <button class="button" id="revokePermissionBtn">Revoke Current Site</button>
+        </div>
+        
+        <div class="section">
+            <h3>📝 Activity Log</h3>
+            <div id="log" class="log">Ready to use PDM Extension...</div>
+            <button class="button">Clear Log</button>
+        </div>
+    </div>
+
+    <script src="nillion-api.js"></script>
+    <script src="popup.js"></script>
+</body>
+</html>

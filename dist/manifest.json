@@ -1,0 +1,52 @@
+{
+  "manifest_version": 3,
+  "name": "Nillion Vault",
+  "version": "1.0.0",
+  "description": "Secure private data management powered by Nillion SecretVaults",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+    "action": {
+      "default_popup": "popup.html",
+      "default_title": "Nillion Vault",
+      "default_icon": {
+        "16": "icons/icon-16.svg",
+        "32": "icons/icon-32.svg",
+        "48": "icons/icon-48.svg",
+        "128": "icons/icon-128.svg"
+      }
+    },
+    "icons": {
+      "16": "icons/icon-16.svg",
+      "32": "icons/icon-32.svg",
+      "48": "icons/icon-48.svg",
+      "128": "icons/icon-128.svg"
+    },
+    "web_accessible_resources": [
+      {
+        "resources": ["popup.html", "data-form.html", "test.html", "test-upload.html", "simple-upload-test.html", "test-smart-detection.html", "debug-detection.html", "nillion-api.js", "assets/*"],
+        "matches": ["<all_urls>"]
+      }
+    ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self';"
+  }
+}
