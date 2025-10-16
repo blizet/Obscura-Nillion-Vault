@@ -1,13 +1,11 @@
 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="16" height="16" rx="3" fill="url(#gradient)"/>
+  <path d="M8 3C6.5 3 5.5 4 5.5 5.5V6.5C5.5 8 6.5 9 8 9C9.5 9 10.5 8 10.5 6.5V5.5C10.5 4 9.5 3 8 3Z" fill="white"/>
+  <path d="M6 10.5C6 9.5 6.5 9 8 9C9.5 9 10 9.5 10 10.5V11.5C10 12.5 9.5 13 8 13C6.5 13 6 12.5 6 11.5V10.5Z" fill="white"/>
   <defs>
-    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    <linearGradient id="gradient" x1="0" y1="0" x2="16" y2="16" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#667eea"/>
+      <stop offset="1" stop-color="#764ba2"/>
     </linearGradient>
   </defs>
-  <rect width="16" height="16" rx="3" fill="url(#gradient)"/>
-  <path d="M4 6h8v1H4V6zm0 2h6v1H4V8zm0 2h8v1H4v-1z" fill="white"/>
-  <circle cx="12" cy="4" r="2" fill="#ffd700"/>
-  <path d="M11 3h2v2h-2V3z" fill="white"/>
-  <text x="8" y="14" font-family="Arial, sans-serif" font-size="8" font-weight="bold" fill="white" text-anchor="middle">N</text>
 </svg>

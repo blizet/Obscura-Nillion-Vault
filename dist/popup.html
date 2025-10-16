@@ -3,51 +3,517 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nillion Vault</title>
+    <title>Nillion Vault 2.0</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="icon" href="icons/icon-16.png">
+    <link rel="icon" type="image/svg+xml" href="icons/icon-16.svg">
+    <link rel="icon" type="image/png" href="icons/icon.png">
 </head>
 <body>
-    <div class="container">
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <div class="loading-logo">
+                <img src="icons/icon-48.svg" alt="Nillion Vault" class="logo-image">
+            </div>
+            <div class="loading-text">
+                <h2>Nillion Vault</h2>
+                <p>Loading your secure vault...</p>
+            </div>
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+
+    <div class="container" id="mainContainer" style="display: none;">
         <div class="header">
-            <h1>🔒 Nillion Vault</h1>
-            <p>Powered by Nillion SecretVaults</p>
+            <div class="header-content">
+                <div class="logo-container">
+                    <div class="logo">🔒</div>
+                    <div class="logo-text">
+                        <h1>Nillion Vault</h1>
+                        <p>Your Secure Digital Identity</p>
+                    </div>
+                </div>
+                <div class="status-badge" id="connectionStatus">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Ready</span>
+                </div>
+        </div>
         </div>
         
-        <div id="status" class="status warning">
-            <strong>Status:</strong> Initializing...
+            <!-- Tab Navigation -->
+            <div class="tab-navigation">
+                <button class="tab-button active" data-tab="dashboard">
+                    <span class="tab-icon">📈</span>
+                    <span class="tab-text">Dashboard</span>
+                </button>
+                <button class="tab-button" data-tab="identity">
+                    <span class="tab-icon">🔑</span>
+                    <span class="tab-text">Identity</span>
+                </button>
+                <button class="tab-button" data-tab="documents">
+                    <span class="tab-icon">📋</span>
+                    <span class="tab-text">Documents</span>
+                </button>
+                <button class="tab-button" data-tab="security">
+                    <span class="tab-icon">🔒</span>
+                    <span class="tab-text">Security & Permissions</span>
+                </button>
+            </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Dashboard Tab -->
+            <div class="tab-pane active" id="dashboard">
+                <div class="welcome-section">
+                    <div class="welcome-content">
+                        <h2>Welcome to Your Vault</h2>
+                        <p>Manage your digital identity and private data securely</p>
+                    </div>
+                </div>
+
+                <div class="quick-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon">🆔</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="identityCount">0</div>
+                            <div class="stat-label">Identities</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📄</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="documentCount">0</div>
+                            <div class="stat-label">Documents</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔐</div>
+                        <div class="stat-info">
+                            <div class="stat-number" id="permissionCount">0</div>
+                            <div class="stat-label">Permissions</div>
+                        </div>
+                    </div>
         </div>
         
         <div class="section">
             <h3>🚀 Quick Actions</h3>
-            <button class="button" id="configureApiBtn">⚙️ Configure API Key</button>
-            <button class="button" id="checkStatusBtn">Check Status</button>
-            <button class="button" id="generateDIDBtn">Generate DID</button>
-            <button class="button" id="createDataBtn">Create Data</button>
+                    <div class="action-grid">
+                        <button class="action-button primary" id="generateDIDBtn">
+                            <div class="action-icon">🆔</div>
+                            <div class="action-content">
+                                <div class="action-title">Create Identity</div>
+                                <div class="action-desc">Generate your DID</div>
+                            </div>
+            </button>
+                        <button class="action-button secondary" id="createDocumentBtnDashboard">
+                            <div class="action-icon">📄</div>
+                            <div class="action-content">
+                                <div class="action-title">New Document</div>
+                                <div class="action-desc">Store private data</div>
+                            </div>
+            </button>
+                        <button class="action-button secondary" id="checkStatusBtn">
+                            <div class="action-icon">🔍</div>
+                            <div class="action-content">
+                                <div class="action-title">Check Status</div>
+                                <div class="action-desc">View connection</div>
+                            </div>
+            </button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">
+                        <h3>📊 Recent Activity</h3>
+                        <p>Your latest vault activities</p>
+                    </div>
+                    <div class="activity-controls" style="margin-bottom: 16px;">
+                        <button class="button-icon" id="exportActivityBtn" title="Export Log">
+                            <span>📥</span>
+                        </button>
+                        <button class="button-icon" id="clearActivityBtn" title="Clear Log">
+                            <span>🗑️</span>
+                        </button>
+                    </div>
+                    <div class="activity-list" id="activityList">
+                        <div class="activity-item">
+                            <div class="activity-icon">✨</div>
+                            <div class="activity-content">
+                                <div class="activity-time">Just now</div>
+                                <div class="activity-desc">Welcome to Nillion Vault!</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Identity Management Tab -->
+            <div class="tab-pane" id="identity">
+                <div class="section">
+                    <div class="section-header">
+                        <h3>🆔 Your Digital Identity</h3>
+                        <p>Create and manage your decentralized identifiers</p>
+                    </div>
+                    <div class="identity-list" id="identityList">
+                        <div class="empty-state">
+                            <div class="empty-icon">👤</div>
+                            <h4>No identities yet</h4>
+                            <p>Create your first digital identity to get started</p>
+                            <div class="identity-actions">
+                                <button class="button primary" id="createIdentityBtn">
+                <span>➕</span>
+                                    <span>Create Identity</span>
+                                </button>
+                                <button class="button secondary" id="importIdentityBtn">
+                                    <span>📥</span>
+                                    <span>Import Identity</span>
+            </button>
+                            </div>
+                        </div>
+                    </div>
         </div>
         
         <div class="section">
-            <h3>📊 Data Management</h3>
-            <button class="button" id="listDataBtn">List Data</button>
-            <button class="button" id="clearDataBtn">Clear All Data</button>
+                    <div class="section-header">
+                        <h3>🔑 Security Keys</h3>
+                        <p>Your cryptographic keypair for secure operations</p>
+                    </div>
+                    <div class="keypair-info" id="keypairInfo">
+                        <div class="keypair-card">
+                            <div class="keypair-item">
+                                <div class="keypair-label">Current DID</div>
+                                <div class="keypair-value" id="currentDID">Not generated</div>
+                            </div>
+                            <div class="keypair-item">
+                                <div class="keypair-label">Status</div>
+                                <div class="keypair-value" id="keypairStatus">Not initialized</div>
+                            </div>
+                            <div class="keypair-item">
+                                <div class="keypair-label">Public Key</div>
+                                <div class="keypair-value" id="publicKey">Not available</div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="button secondary" id="generateKeypairBtn">
+                        <span>🔑</span>
+                        <span>Generate New Keypair</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Documents Tab -->
+            <div class="tab-pane" id="documents">
+                <div class="section">
+                    <div class="section-header">
+                        <h3>📄 Your Documents</h3>
+                        <p>Store and manage your private data securely</p>
+                    </div>
+                    <div class="document-controls">
+                        <button class="button primary" id="createDocumentBtn">
+                            <span>➕</span>
+                            <span>New Document</span>
+            </button>
+                        <button class="button secondary" id="refreshDocumentsBtn">
+                            <span>🔄</span>
+                            <span>Refresh</span>
+            </button>
+                        <button class="button secondary" id="createSampleDataBtn" style="display: none;">
+                            <span>🧪</span>
+                            <span>Create Sample Data</span>
+            </button>
+                    </div>
+                    <div class="document-list" id="documentList">
+                        <div class="loading-state" id="documentsLoading" style="display: none;">
+                            <div class="loading-spinner"></div>
+                            <p>Loading documents...</p>
+                        </div>
+                        <div class="empty-state" id="documentsEmpty">
+                            <div class="empty-icon">📄</div>
+                            <h4>No documents yet</h4>
+                            <p>Create your first document to store private data</p>
+                            <button class="button secondary" id="createSampleDataEmptyBtn">
+                                <span>🧪</span>
+                                <span>Create Sample Data for Testing</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security & Permissions Tab -->
+            <div class="tab-pane" id="security">
+                <div class="section">
+                    <div class="section-header">
+                        <h3>🛡️ Security Settings</h3>
+                        <p>Configure your vault's security preferences</p>
+                    </div>
+                    <div class="security-setting">
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-title">Auto-lock</div>
+                                <div class="setting-desc">Automatically lock the extension after inactivity</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="autoLockToggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-title">Lock Timeout</div>
+                                <div class="setting-desc">Minutes of inactivity before auto-lock</div>
+                            </div>
+                            <select id="lockTimeoutSelect" class="setting-select">
+                                <option value="5">5 minutes</option>
+                                <option value="15" selected>15 minutes</option>
+                                <option value="30">30 minutes</option>
+                                <option value="60">1 hour</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-title">Password Authentication</div>
+                                <div class="setting-desc">Require password to unlock the extension</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="passphraseAuthToggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-title">Audit Logging</div>
+                                <div class="setting-desc">Log all activities for security auditing</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="auditLoggingToggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
         </div>
         
         <div class="section">
-            <h3>🔐 Permissions</h3>
-            <button class="button" id="testPermissionBtn">Test Permission</button>
-            <button class="button" id="listPermissionsBtn">List Permissions</button>
-            <button class="button" id="revokePermissionBtn">Revoke Current Site</button>
+                    <div class="section-header">
+                        <h3>🔐 Authentication</h3>
+                        <p>Manage your vault password and security</p>
+                    </div>
+                    <div class="auth-controls">
+                        <button class="button secondary" id="setPassphraseBtn">
+                            <span>🔑</span>
+                            <span>Change Password</span>
+            </button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">
+                        <h3>🔐 Access Control</h3>
+                        <p>Manage who can access your data and documents</p>
+                    </div>
+                    <div class="permission-controls">
+                        <button class="button primary" id="grantPermissionBtn">
+                            <span>✅</span>
+                            <span>Grant Access</span>
+            </button>
+                        <button class="button danger" id="revokeAllPermissionsBtn">
+                <span>🚫</span>
+                            <span>Revoke All</span>
+                        </button>
+                    </div>
+                    <div class="permission-list" id="permissionList">
+                        <div class="empty-state" id="permissionsEmpty">
+                            <div class="empty-icon">🔒</div>
+                            <h4>No permissions granted</h4>
+                            <p>Grant access to websites and applications</p>
+                        </div>
+                        <div class="permission-items" id="permissionItems" style="display: none;">
+                            <!-- Permission items will be dynamically added here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-header">
+                        <h3>📋 Permission Policies</h3>
+                        <p>Automated permission rules for trusted applications</p>
+                    </div>
+                    <div class="policy-list" id="policyList">
+                        <div class="empty-state">
+                            <div class="empty-icon">📋</div>
+                            <h4>No policies configured</h4>
+                            <p>Create automated permission rules for trusted applications</p>
+                            <button class="button primary" id="createPolicyBtn">
+                                <span>➕</span>
+                                <span>Create Policy</span>
+            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         
-          <div class="section">
-              <h3>📝 Activity Log</h3>
-              <div id="log" class="log">Ready to use Nillion Vault Extension...</div>
-              <div style="display: flex; gap: 10px; margin-top: 10px;">
-                  <button class="button" id="copyLogBtn">📋 Copy Log</button>
-                  <button class="button" id="clearLogBtn">🗑️ Clear Log</button>
-              </div>
-          </div>
+        <!-- Document Creation Modal -->
+        <div id="documentModal" class="modal" style="display: none;">
+            <div class="modal-overlay" onclick="closeDocumentModal()"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">
+                        <div class="modal-icon">📝</div>
+                        <h3>Create New Document</h3>
+                    </div>
+                    <div class="modal-header-actions">
+                    <button class="button-icon" id="quickUploadBtn" title="Quick Upload">
+                        <span>📁</span>
+                    </button>
+                        <button class="modal-close" id="modalCloseBtn">&times;</button>
+                    </div>
+                </div>
+                <form id="documentForm" class="document-form">
+                    <div class="form-group">
+                        <label for="docName" class="form-label">Document Name *</label>
+                        <input type="text" id="docName" class="form-input" placeholder="Enter document name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="docType" class="form-label">Document Type *</label>
+                    <select id="docType" class="form-select" required onchange="toggleContentFields()">
+                        <option value="">Select document type</option>
+                        <option value="text">📝 Text Document</option>
+                        <option value="image">🖼️ Image File</option>
+                        <option value="pdf">📄 PDF Document</option>
+                        <option value="audio">🎵 Audio File</option>
+                        <option value="video">🎬 Video File</option>
+                        <option value="archive">🗜️ Archive File</option>
+                        <option value="general">📎 General File</option>
+                        <option value="note">📝 Note</option>
+                        <option value="credential">🔑 Credential</option>
+                    </select>
+                    </div>
+
+                    <!-- Universal Document Upload Section -->
+                    <div class="form-group">
+                        <label class="form-label">Document Upload</label>
+                        <div class="universal-upload-area" id="universalUploadArea">
+                            <div class="upload-content">
+                                <div class="upload-icon">📁</div>
+                                <div class="upload-text">Click to upload document or drag and drop</div>
+                                <div class="upload-hint">All file types supported • Max 500MB</div>
+                            </div>
+                            <input type="file" id="universalFileInput" style="display: none;" onchange="handleUniversalFileSelect(this)">
+                        </div>
+                        <div id="universalFilePreview" class="file-preview" style="display: none;"></div>
+                    </div>
+                    
+                    <div id="contentFields" class="content-fields" style="display: none;">
+                        <div class="form-group" id="textContentGroup" style="display: none;">
+                            <label for="docContent" class="form-label">Content</label>
+                            <textarea id="docContent" class="form-textarea" placeholder="Enter document content" rows="4"></textarea>
+                        </div>
+                        
+                        <div class="form-group" id="imageUploadGroup" style="display: none;">
+                            <label for="docImage" class="form-label">Upload Image</label>
+                            <div class="file-upload-area" onclick="document.getElementById('docImage').click()">
+                                <div class="file-upload-content">
+                                    <div class="file-upload-icon">🖼️</div>
+                                    <div class="file-upload-text">Click to upload image or drag and drop</div>
+                                    <div class="file-upload-hint">PNG, JPG, GIF up to 10MB</div>
+                                </div>
+                                <input type="file" id="docImage" accept="image/*" style="display: none;" onchange="handleFileSelect(this, 'image')">
+                            </div>
+                            <div id="imagePreview" class="file-preview" style="display: none;"></div>
+                        </div>
+                        
+                        <div class="form-group" id="pdfUploadGroup" style="display: none;">
+                            <label for="docPdf" class="form-label">Upload PDF</label>
+                            <div class="file-upload-area" onclick="document.getElementById('docPdf').click()">
+                                <div class="file-upload-content">
+                                    <div class="file-upload-icon">📄</div>
+                                    <div class="file-upload-text">Click to upload PDF or drag and drop</div>
+                                    <div class="file-upload-hint">PDF files up to 50MB</div>
+                                </div>
+                                <input type="file" id="docPdf" accept=".pdf" style="display: none;" onchange="handleFileSelect(this, 'pdf')">
+                            </div>
+                            <div id="pdfPreview" class="file-preview" style="display: none;"></div>
+                        </div>
+                        
+                        <div class="form-group" id="audioUploadGroup" style="display: none;">
+                            <label for="docAudio" class="form-label">Upload Audio</label>
+                            <div class="file-upload-area" onclick="document.getElementById('docAudio').click()">
+                                <div class="file-upload-content">
+                                    <div class="file-upload-icon">🎵</div>
+                                    <div class="file-upload-text">Click to upload audio or drag and drop</div>
+                                    <div class="file-upload-hint">MP3, WAV, OGG up to 100MB</div>
+                                </div>
+                                <input type="file" id="docAudio" accept="audio/*" style="display: none;" onchange="handleFileSelect(this, 'audio')">
+                            </div>
+                            <div id="audioPreview" class="file-preview" style="display: none;"></div>
+                        </div>
+                        
+                        <div class="form-group" id="videoUploadGroup" style="display: none;">
+                            <label for="docVideo" class="form-label">Upload Video</label>
+                        <div class="file-upload-area" onclick="document.getElementById('docVideo').click()">
+                            <div class="file-upload-content">
+                                <div class="file-upload-icon">🎬</div>
+                                <div class="file-upload-text">Click to upload video or drag and drop</div>
+                                <div class="file-upload-hint">MP4, AVI, MOV up to 500MB</div>
+                            </div>
+                                <input type="file" id="docVideo" accept="video/*" style="display: none;" onchange="handleFileSelect(this, 'video')">
+                            </div>
+                            <div id="videoPreview" class="file-preview" style="display: none;"></div>
+                        </div>
+                        
+                        <div class="form-group" id="archiveUploadGroup" style="display: none;">
+                            <label for="docArchive" class="form-label">Upload Archive</label>
+                        <div class="file-upload-area" onclick="document.getElementById('docArchive').click()">
+                            <div class="file-upload-content">
+                                <div class="file-upload-icon">🗜️</div>
+                                <div class="file-upload-text">Click to upload archive or drag and drop</div>
+                                <div class="file-upload-hint">ZIP, RAR, 7Z up to 200MB</div>
+                            </div>
+                                <input type="file" id="docArchive" accept=".zip,.rar,.7z,.tar,.gz" style="display: none;" onchange="handleFileSelect(this, 'archive')">
+                            </div>
+                            <div id="archivePreview" class="file-preview" style="display: none;"></div>
+                        </div>
+                        
+                        <div class="form-group" id="generalFileUploadGroup" style="display: none;">
+                            <label for="docGeneralFile" class="form-label">Upload File</label>
+                            <div class="file-upload-area" onclick="document.getElementById('docGeneralFile').click()">
+                                <div class="file-upload-content">
+                                    <div class="file-upload-icon">📎</div>
+                                    <div class="file-upload-text">Click to upload any file or drag and drop</div>
+                                    <div class="file-upload-hint">All file types supported up to 100MB</div>
+                                </div>
+                                <input type="file" id="docGeneralFile" style="display: none;" onchange="handleFileSelect(this, 'general')">
+                            </div>
+                            <div id="generalPreview" class="file-preview" style="display: none;"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="docDescription" class="form-label">Description</label>
+                        <textarea id="docDescription" class="form-textarea" placeholder="Enter document description" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="button secondary" id="cancelBtn">
+                            <span>❌</span>
+                            <span>Cancel</span>
+                </button>
+                        <button type="submit" class="button primary">
+                            <span>✅</span>
+                            <span>Create Document</span>
+                </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Modals will be inserted here -->
+        <div id="modalContainer"></div>
     </div>
+
 
     <script src="nillion-sdk.js"></script>
     <script src="popup.js"></script>

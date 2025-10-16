@@ -1,15 +1,11 @@
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="32" height="32" rx="6" fill="url(#gradient)"/>
+  <path d="M16 6C13 6 11 8 11 11V13C11 16 13 18 16 18C19 18 21 16 21 13V11C21 8 19 6 16 6Z" fill="white"/>
+  <path d="M12 21C12 19 13 18 16 18C19 18 20 19 20 21V23C20 25 19 26 16 26C13 26 12 25 12 23V21Z" fill="white"/>
   <defs>
-    <linearGradient id="gradient32" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#667eea"/>
+      <stop offset="1" stop-color="#764ba2"/>
     </linearGradient>
   </defs>
-  <rect width="32" height="32" rx="6" fill="url(#gradient32)"/>
-  <rect x="6" y="10" width="20" height="2" rx="1" fill="white"/>
-  <rect x="6" y="14" width="16" height="2" rx="1" fill="white"/>
-  <rect x="6" y="18" width="20" height="2" rx="1" fill="white"/>
-  <circle cx="24" cy="8" r="4" fill="#ffd700"/>
-  <path d="M22 6h4v4h-4V6z" fill="white"/>
-  <text x="16" y="28" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle">Nillion</text>
 </svg>

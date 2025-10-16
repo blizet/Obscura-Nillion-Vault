@@ -1,15 +1,18 @@
 {
   "manifest_version": 3,
   "name": "Nillion Vault",
-  "version": "1.0.0",
-  "description": "Secure private data management powered by Nillion SecretVaults",
+  "version": "2.0.0",
+  "description": "Advanced decentralized identity and private data management powered by Nillion SecretVaults",
   "permissions": [
     "storage",
     "activeTab",
     "scripting",
     "tabs",
     "alarms",
-    "notifications"
+    "notifications",
+    "identity",
+    "unlimitedStorage",
+    "offscreen"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -28,21 +31,21 @@
       "default_popup": "popup.html",
       "default_title": "Nillion Vault",
       "default_icon": {
-        "16": "icons/icon-16.svg",
-        "32": "icons/icon-32.svg",
-        "48": "icons/icon-48.svg",
-        "128": "icons/icon-128.svg"
+        "16": "icons/icon.png",
+        "32": "icons/icon.png",
+        "48": "icons/icon.png",
+        "128": "icons/icon.png"
       }
     },
     "icons": {
-      "16": "icons/icon-16.svg",
-      "32": "icons/icon-32.svg",
-      "48": "icons/icon-48.svg",
-      "128": "icons/icon-128.svg"
+      "16": "icons/icon.png",
+      "32": "icons/icon.png",
+      "48": "icons/icon.png",
+      "128": "icons/icon.png"
     },
     "web_accessible_resources": [
       {
-        "resources": ["popup.html", "welcome.html", "welcome.js", "nillion-api.js", "assets/*"],
+        "resources": ["popup.html", "welcome.html", "welcome.js", "nillion-api.js", "assets/*", "icons/*"],
         "matches": ["<all_urls>"]
       }
     ],
